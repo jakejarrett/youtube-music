@@ -1,0 +1,6 @@
+- everything
+
+- Hook into the JS so we can pass in pause/next/back/skip to etc.
+- Get currently playing
+- make it not crash
+- MPRIS/DBUS Support
