@@ -60,6 +60,13 @@ public class Browser : Window {
 		this.add(scrolled_window);
 	}
 
+	/**
+	 * HANDLE NEXT/BACK ETC;
+	 * 
+	 * Play;
+	 * new_view.run_javascript("var elements = document.getElementsByClassName('.play-pause-button'); if(elements.length > 0) { elements[0].click(); }")
+	 */
+
 	public static int main(string[] args) {
 		Gtk.init(ref args);
 
