@@ -8,12 +8,12 @@ public class Browser : Window {
 	private string cookies_location = GLib.Environment.get_user_cache_dir () + "/youtube-music/cookies/cookie.txt";
 	private const string URL = "http://music.youtube.com/";
 	private const string TITLE = "Browser";
+	private Gtk.HeaderBar headerbar;
 	private string[] whitelist = {
 		"http://music.youtube.com/"
 	};
-	private string[] blacklist = {
-		"https://hello.world"
-	};
+	private string[] blacklist = {};
+	private WebKit.WebView new_view;
 
 	private void ensure_cookies_exist () {
 		Posix.mkdir (GLib.Environment.get_user_cache_dir () + "/youtube-music", 0700);
@@ -27,7 +27,7 @@ public class Browser : Window {
 		this.set_default_size (800, 600);
 		this.destroy.connect(Gtk.main_quit);
 
-		Gtk.HeaderBar headerbar = new Gtk.HeaderBar ();
+		this.headerbar = new Gtk.HeaderBar ();
 		headerbar.show_close_button = true;
 		headerbar.title = Browser.TITLE;
 		headerbar.subtitle = "yeee boiii";
@@ -40,31 +40,46 @@ public class Browser : Window {
 		WebKit.CookieManager cookie_manager = view.get_context ().get_cookie_manager ();
 		cookie_manager.set_persistent_storage (this.cookies_location, WebKit.CookiePersistentStorage.SQLITE);
 		WebKit.UserContentManager user_content_manager = new WebKit.UserContentManager ();
-		WebKit.UserScript script = new WebKit.UserScript (
-			"window.alert(1);",
-			UserContentInjectedFrames.ALL_FRAMES,
-			UserScriptInjectionTime.END,
-			whitelist,
-			blacklist
-		);
-		user_content_manager.add_script (script);
-		WebKit.WebView new_view = new view.with_user_content_manager (user_content_manager);
-		new_view.set_settings (settings);
-		new_view.load_uri (Browser.URL);
-		//  new_view.settings.enable_developer_extras = true;
+		this.new_view = new view.with_user_content_manager (user_content_manager);
+		this.new_view.set_settings (settings);
+		this.new_view.load_uri (Browser.URL);
+		this.new_view.load_changed.connect((source, evt) => {
+			if (evt == WebKit.LoadEvent.FINISHED) {
+				this.listen();
+			}
+		});
 
 		ScrolledWindow scrolled_window = new ScrolledWindow(null, null);
 		scrolled_window.set_policy(PolicyType.AUTOMATIC, PolicyType.AUTOMATIC);
-		scrolled_window.add(new_view);
+		scrolled_window.add(this.new_view);
 
 		this.add(scrolled_window);
+	}
+
+	private async void listen () {
+		//  yield this.new_view.run_javascript("alert(\"yeah\");");
+		var result = yield this.new_view.run_javascript("""
+		console.log('yeah');
+		let player;
+		let intervalId = 0;
+		const waitUntilReady = () => {
+			const _player = document.querySelector('ytmusic-player-bar');
+			if (_player) {
+				player = _player;
+				const playerApi = player.playerApi_;
+				playerApi.addEventListener('onStateChange', e => console.log(playerApi));
+				window.clearInterval(intervalId);
+			}
+		};
+		intervalId = window.setInterval(waitUntilReady, 100);
+		""");
 	}
 
 	/**
 	 * HANDLE NEXT/BACK ETC;
 	 * 
 	 * Play;
-	 * new_view.run_javascript("var elements = document.getElementsByClassName('.play-pause-button'); if(elements.length > 0) { elements[0].click(); }")
+	 * new_view.run_javascript("const play = document.querySelector("#play-pause-button"); play.click()")
 	 */
 
 	public static int main(string[] args) {
