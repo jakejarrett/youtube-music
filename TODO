@@ -1,3 +1,8 @@
+# New
+
+- [ ] Investigate using "WebExtension API" to allow handling of JS events in vala vs JS (example)[https://github.com/rschroll/webkitdom/blob/extension/dom-server.vala]
+
+# OLD Todo
 - everything
 
 - Hook into the JS so we can pass in pause/next/back/skip to etc.
