@@ -57,7 +57,13 @@ public class Browser : Window {
 	}
 
 	private async void listen () {
-		//  yield this.new_view.run_javascript("alert(\"yeah\");");
+		/**
+		 * This flow needs to happen;
+		 * - When we get a "PLAY" state, we need to essentially notify the vala code that "hey, we're playing right now"
+		 * - Same for pause & stopped.
+		 * 
+		 * - We need to also handle from Desktop -> YT Music (TODO.)
+		 */
 		var result = yield this.new_view.run_javascript("""
 		console.log('yeah');
 		let player;
@@ -67,12 +73,20 @@ public class Browser : Window {
 			if (_player) {
 				player = _player;
 				const playerApi = player.playerApi_;
-				playerApi.addEventListener('onStateChange', e => console.log(playerApi));
+				playerApi.addEventListener('onStateChange', e => {
+					if (e === 1) {
+						// we're playing.
+						// do the thing for getting to vala that we out here playin
+					}
+					console.log(playerApi)
+				});
 				window.clearInterval(intervalId);
 			}
 		};
 		intervalId = window.setInterval(waitUntilReady, 100);
 		""");
+
+		Posix.stdout.printf("Output %s\n", (string)result);
 	}
 
 	/**
